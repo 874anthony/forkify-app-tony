@@ -1,9 +1,11 @@
 import Search from './models/Search';
 import Recipe from './models/Recipe';
 import List from './models/List';
+import Likes from './models/Likes';
 import * as searchView from './view/searchView';
 import * as recipeView from './view/recipeView';
 import * as listView from './view/listView';
+import * as likesView from './view/likesView';
 import { elements, renderLoader, clearLoader } from './view/base';
 
 /**
@@ -96,6 +98,7 @@ const controlRecipe = async () => {
       clearLoader();
       recipeView.renderRecipe(state.recipe);
     } catch (err) {
+      console.log(err);
       alert('Error processing recipe!');
     }
   }
@@ -139,6 +142,40 @@ elements.shopping.addEventListener('click', ($event) => {
   }
 });
 
+/**
+ * LIKE CONTROLLER
+ */
+const controlLike = () => {
+  if (!state.likes) state.likes = new Likes();
+
+  const currentID = state.recipe.id;
+
+  // User has NOT yet liked current recipe
+  if (!state.likes.isLiked(currentID)) {
+    // Add the like to the state
+    const newLike = state.likes.addLike(
+      currentID,
+      state.recipe.title,
+      state.recipe.author,
+      state.recipe.img
+    );
+
+    // Toggle the like button
+    likesView.toggleLikeBtn(true);
+
+    // Add like to the UI list
+    console.log(state.likes);
+
+    // User HAS yet liked current recipe
+  } else {
+    state.likes.deleteLike(currentID);
+
+    likesView.toggleLikeBtn(false);
+
+    console.log(state.likes);
+  }
+};
+
 // Handling recipe button clicks
 elements.recipe.addEventListener('click', ($event) => {
   if ($event.target.matches('.btn-decrease, .btn-decrease *')) {
@@ -153,9 +190,10 @@ elements.recipe.addEventListener('click', ($event) => {
     state.recipe.updateServings('inc');
     recipeView.updateServingsIngredients(state.recipe);
   } else if ($event.target.matches('.recipe__btn--add, .recipe__btn--add *')) {
+    // Add ingredients to the shop list
     controlList();
+  } else if ($event.target.matches('.recipe__love, .recipe__love *')) {
+    // Like controller
+    controlLike();
   }
-  // console.log(state.recipe);
 });
-
-window.l = new List();
