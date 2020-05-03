@@ -1,7 +1,9 @@
 import Search from './models/Search';
 import Recipe from './models/Recipe';
+import List from './models/List';
 import * as searchView from './view/searchView';
 import * as recipeView from './view/recipeView';
+import * as listView from './view/listView';
 import { elements, renderLoader, clearLoader } from './view/base';
 
 /**
@@ -13,6 +15,7 @@ import { elements, renderLoader, clearLoader } from './view/base';
  */
 
 const state = {};
+window.state = state;
 
 /**
  * SEARCH CONTROLLER
@@ -102,6 +105,40 @@ const controlRecipe = async () => {
   window.addEventListener(event, controlRecipe)
 );
 
+/**
+ * THE LIST CONTROLLER
+ */
+
+const controlList = () => {
+  // If LIST NOT exist
+  if (!state.list) state.list = new List();
+
+  // Add ingredients to the list
+  state.recipe.ingredients.forEach((el) => {
+    const item = state.list.addItem(el.count, el.unit, el.ingredient);
+    listView.renderItem(item);
+  });
+};
+
+// Handle delete and update list item events
+elements.shopping.addEventListener('click', ($event) => {
+  const id = $event.target.closest('.shopping__item').dataset.itemid;
+
+  // Handle the delete button
+  if ($event.target.matches('.shopping__delete, .shopping__delete *')) {
+    // Delete from state
+    state.list.deleteItem(id);
+
+    // Delete from the UI
+    listView.deleteItem(id);
+
+    // Handle the count update
+  } else if ($event.target.matches('.shopping__count-value')) {
+    const val = parseFloat($event.target.value);
+    state.list.updateCount(id, val);
+  }
+});
+
 // Handling recipe button clicks
 elements.recipe.addEventListener('click', ($event) => {
   if ($event.target.matches('.btn-decrease, .btn-decrease *')) {
@@ -115,7 +152,10 @@ elements.recipe.addEventListener('click', ($event) => {
     // Increase button is clicked
     state.recipe.updateServings('inc');
     recipeView.updateServingsIngredients(state.recipe);
+  } else if ($event.target.matches('.recipe__btn--add, .recipe__btn--add *')) {
+    controlList();
   }
-
   // console.log(state.recipe);
 });
+
+window.l = new List();
